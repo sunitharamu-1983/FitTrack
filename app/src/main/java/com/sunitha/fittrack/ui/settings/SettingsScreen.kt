@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sunitha.fittrack.data.datastore.ThemeMode
 import com.sunitha.fittrack.ui.theme.GreenPrimary
 import com.sunitha.fittrack.ui.theme.OrangeAccent
 import java.io.File
@@ -30,6 +31,7 @@ fun SettingsScreen(vm: SettingsViewModel, onBack: () -> Unit, onNavigateToImport
     val context     = LocalContext.current
     val state       by vm.state.collectAsState()
     val backupFiles by vm.backupFiles.collectAsState()
+    val themeMode   by vm.themeMode.collectAsState()
     val importDone  = remember { isImportDone(context) }
 
     LaunchedEffect(Unit) { vm.loadBackupFiles(context) }
@@ -86,6 +88,8 @@ fun SettingsScreen(vm: SettingsViewModel, onBack: () -> Unit, onNavigateToImport
                 loading     = false,
                 onClick     = onEditProfile
             )
+
+            AppearanceCard(themeMode = themeMode, onSelect = vm::setThemeMode)
 
             if (!importDone) {
                 SettingsActionCard(
@@ -155,6 +159,49 @@ fun SettingsScreen(vm: SettingsViewModel, onBack: () -> Unit, onNavigateToImport
             }
 
             Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+// ── Appearance Card ────────────────────────────────────────────────────────────
+
+@Composable
+private fun AppearanceCard(themeMode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
+    val options = listOf(
+        Triple(ThemeMode.SYSTEM, "System", Icons.Filled.BrightnessAuto),
+        Triple(ThemeMode.LIGHT,  "Light",  Icons.Filled.LightMode),
+        Triple(ThemeMode.DARK,   "Dark",   Icons.Filled.DarkMode)
+    )
+    Card(
+        modifier  = Modifier.fillMaxWidth(),
+        shape     = RoundedCornerShape(20.dp),
+        colors    = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(0.1f)) {
+                    Icon(Icons.Filled.Palette, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(10.dp).size(24.dp))
+                }
+                Column {
+                    Text("Appearance", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text("Choose how FitTrack looks.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(0.55f))
+                }
+            }
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                options.forEachIndexed { index, (mode, label, icon) ->
+                    SegmentedButton(
+                        selected = themeMode == mode,
+                        onClick  = { onSelect(mode) },
+                        shape    = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                        icon     = { Icon(icon, null, modifier = Modifier.size(16.dp)) },
+                        colors   = SegmentedButtonDefaults.colors(
+                            activeContainerColor = MaterialTheme.colorScheme.primary.copy(0.12f),
+                            activeContentColor   = MaterialTheme.colorScheme.primary
+                        )
+                    ) { Text(label, fontSize = 13.sp) }
+                }
+            }
         }
     }
 }

@@ -156,7 +156,7 @@ fun AppNavigation() {
                 AiInsightsScreen(vm)
             }
             composable("settings") {
-                val vm: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(repo))
+                val vm: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(repo, app.themeStore))
                 SettingsScreen(
                     vm                 = vm,
                     onBack             = { navController.popBackStack() },

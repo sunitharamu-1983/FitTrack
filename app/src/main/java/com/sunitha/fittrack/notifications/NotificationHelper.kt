@@ -69,4 +69,13 @@ object NotificationHelper {
 
     fun showFoodReminder(context: Context, mealName: String = "meal") =
         postReminder(context, "Log your $mealName", "Keep your macros on track — tap to open FitTrack.", 2002, CHANNEL_FOOD)
+
+    // Reminder notification IDs currently in use — cancelled whenever the app comes
+    // to the foreground by any path (not just by tapping the notification itself).
+    private val reminderNotifIds = listOf(2001, 2002)
+
+    fun cancelAllReminders(context: Context) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        reminderNotifIds.forEach { manager.cancel(it) }
+    }
 }

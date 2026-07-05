@@ -4,12 +4,16 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.sunitha.fittrack.data.datastore.ThemeMode
+import com.sunitha.fittrack.data.datastore.ThemePreferenceStore
 import com.sunitha.fittrack.data.db.entities.*
 import com.sunitha.fittrack.data.repository.FitTrackRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -24,13 +28,21 @@ sealed class BackupRestoreState {
     data class Error(val message: String)   : BackupRestoreState()
 }
 
-class SettingsViewModel(private val repo: FitTrackRepository) : ViewModel() {
+class SettingsViewModel(
+    private val repo: FitTrackRepository,
+    private val themeStore: ThemePreferenceStore
+) : ViewModel() {
 
     private val _state = MutableStateFlow<BackupRestoreState>(BackupRestoreState.Idle)
     val state: StateFlow<BackupRestoreState> = _state.asStateFlow()
 
     private val _backupFiles = MutableStateFlow<List<File>>(emptyList())
     val backupFiles: StateFlow<List<File>> = _backupFiles.asStateFlow()
+
+    val themeMode: StateFlow<ThemeMode> = themeStore.themeMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeMode.SYSTEM)
+
+    fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { themeStore.setThemeMode(mode) } }
 
     fun clearState() { _state.value = BackupRestoreState.Idle }
 
@@ -265,7 +277,10 @@ class SettingsViewModel(private val repo: FitTrackRepository) : ViewModel() {
     }
 }
 
-class SettingsViewModelFactory(private val repo: FitTrackRepository) : ViewModelProvider.Factory {
+class SettingsViewModelFactory(
+    private val repo: FitTrackRepository,
+    private val themeStore: ThemePreferenceStore
+) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T = SettingsViewModel(repo) as T
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = SettingsViewModel(repo, themeStore) as T
 }

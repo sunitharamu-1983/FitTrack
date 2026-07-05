@@ -93,6 +93,10 @@ dependencies {
     // Health Connect (step sync)
     implementation(libs.androidx.health.connect)
 
+    // Home screen widget
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 

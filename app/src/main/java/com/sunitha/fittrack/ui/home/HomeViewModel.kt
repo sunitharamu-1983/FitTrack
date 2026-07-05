@@ -3,6 +3,7 @@ package com.sunitha.fittrack.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.sunitha.fittrack.data.StreakCalculator
 import com.sunitha.fittrack.data.datastore.MacroGoals
 import com.sunitha.fittrack.data.datastore.UserProfileStore
 import com.sunitha.fittrack.data.datastore.calculateMacros
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 class HomeViewModel(
     private val repository:   FitTrackRepository,
@@ -122,39 +122,7 @@ class HomeViewModel(
         walkDays: List<StepEntry> = emptyList(),
         foodEntries: List<FoodEntry> = emptyList(),
         weightEntries: List<WeightEntry> = emptyList()
-    ): Int {
-        val activeDays = buildSet {
-            sessions.forEach      { add(startOfDay(it.dateMillis)) }
-            restDays.forEach      { add(startOfDay(it.dateMillis)) }
-            walkDays.forEach      { add(startOfDay(it.dateMillis)) }
-            foodEntries.forEach   { add(startOfDay(it.dateMillis)) }
-            weightEntries.forEach { add(startOfDay(it.dateMillis)) }
-        }
-        if (activeDays.isEmpty()) return 0
-        val today = startOfDay(System.currentTimeMillis())
-        var current = if (activeDays.contains(today)) today else prevDay(today)
-        var streak = 0
-        while (activeDays.contains(current)) {
-            streak++
-            current = prevDay(current)
-        }
-        return streak
-    }
-
-    private fun startOfDay(millis: Long): Long =
-        Calendar.getInstance().apply {
-            timeInMillis = millis
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-
-    private fun prevDay(millis: Long): Long =
-        Calendar.getInstance().apply {
-            timeInMillis = millis
-            add(Calendar.DAY_OF_YEAR, -1)
-        }.timeInMillis
+    ): Int = StreakCalculator.calculate(sessions, restDays, walkDays, foodEntries, weightEntries)
 
     fun logSteps(steps: Int)            { viewModelScope.launch { repository.logSteps(steps) } }
     fun markRestDay(note: String = "")  { viewModelScope.launch { repository.markRestDay(note) } }
